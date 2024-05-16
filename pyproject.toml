@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "talk_to_lollms"
+version = "0.1.0"
+description = "A client for Lollms that allows audio to audio full interaction with Lollms"
+authors = [
+    { name = "ParisNeo", email = "parisneoai@gmail.com" }
+]
+dependencies = [
+    "requests",
+    "pydantic",
+    "lollms_client>=0.5.9"
+]
+
+[project.scripts]
+talk_to_lollms = "talk_to_lollms:main"
