@@ -17,3 +17,6 @@ dependencies = [
 
 [project.scripts]
 talk_to_lollms = "talk_to_lollms:main"
+
+[tool.setuptools]
+packages = ["talk_to_lollms"]
