@@ -25,6 +25,7 @@ import importlib
 import cv2
 import math
 from datetime import datetime
+
 class TranscriptionSignal(QObject):
     new_user_transcription = pyqtSignal(str, str)
     new_lollms_transcription = pyqtSignal(str, str)
@@ -306,7 +307,10 @@ class AudioRecorder:
                         lollms_text, function_calls =self.fn.generate_with_functions(full_context)
                         if len(function_calls)>0:
                             responses = self.fn.execute_function_calls(function_calls=function_calls)
-                            lollms_text = self.lc.generate_with_images(full_context+"!@>lollms: "+ lollms_text + "\n!@>functions outputs:\n"+ "\n".join(responses) +"!@>lollms:", [self.image_shot])
+                            if self.image_shot:
+                                lollms_text = self.lc.generate_with_images(full_context+"!@>lollms: "+ lollms_text + "\n!@>functions outputs:\n"+ "\n".join(responses) +"!@>lollms:", [self.image_shot])
+                            else:
+                                lollms_text = self.lc.generate(full_context+"!@>lollms: "+ lollms_text + "\n!@>functions outputs:\n"+ "\n".join(responses) +"!@>lollms:")
                         lollms_text = self.fix_string_for_xtts(lollms_text)
                         self.discussion.add_message("lollms",lollms_text)
                         ASCIIColors.red(" -------------- LOLLMS answer -------------------")
@@ -351,9 +355,10 @@ class MainWindow(QMainWindow):
             self.camera_available = True
             self.timer = QTimer()
             self.timer.timeout.connect(self.update_frame)
-            self.timer.start(20)        
 
         self.init_ui()
+        if self.camera_available :
+            self.timer.start(20)        
 
     def init_ui(self):
         self.setWindowTitle('Talk to LoLLMs')
@@ -370,6 +375,12 @@ class MainWindow(QMainWindow):
         self.record_button.setFont(QFont('Arial', 14))
         self.record_button.setStyleSheet("background-color: #4CAF50; color: white; padding: 10px; border-radius: 5px;")
         self.record_button.clicked.connect(self.toggle_recording)
+
+        # Mute Button
+        self.mute_button = QPushButton('Mute')
+        self.mute_button.setFont(QFont('Arial', 14))
+        self.mute_button.setStyleSheet("background-color: #FFA500; color: white; padding: 10px; border-radius: 5px;")
+        self.mute_button.clicked.connect(self.toggle_mute)
 
         # Settings Button
         self.settings_button = QPushButton()
@@ -394,26 +405,49 @@ class MainWindow(QMainWindow):
         # Layouts
         layout = QVBoxLayout()
         layout.addWidget(title_label)
-        layout.addWidget(self.record_button)
-        layout.addWidget(self.settings_button)
+        
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.record_button)
+        button_layout.addWidget(self.mute_button)
+        button_layout.addWidget(self.settings_button)
+        layout.addLayout(button_layout)
 
-        text_and_camera_layout = QHBoxLayout()
-        text_and_camera_layout.addWidget(self.text_edit)
-
+        main_layout = QHBoxLayout()
+        
+        left_layout = QVBoxLayout()
         if self.camera_available:
             # Camera Feed Label
             self.camera_feed = QLabel()
             self.camera_feed.setFixedSize(320, 240)
-            text_and_camera_layout.addWidget(self.camera_feed)
+            left_layout.addWidget(self.camera_feed)
 
-        layout.addLayout(text_and_camera_layout)
+            # Image Feed Label
+            self.image_feed = QLabel()
+            self.image_feed.setFixedSize(320, 240)
+            left_layout.addWidget(self.image_feed)
+
+        # Another Whiteboard
+        self.whiteboard = QLabel()
+        self.whiteboard.setFixedSize(320, 240)
+        self.whiteboard.setStyleSheet("background-color: #ffffff; border: 1px solid #000000;")
+        left_layout.addWidget(self.whiteboard)
+        
+        main_layout.addLayout(left_layout)
+        main_layout.addWidget(self.text_edit)
+
+        layout.addLayout(main_layout)
 
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+        
         # Status Bar
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
+
+
+    def toggle_mute(self):
+        self.recorder.block_listening = self.recorder.block_listening
         
     def update_frame(self):
         ret, frame = self.cap.read()
