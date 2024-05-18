@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "talk_to_lollms"
-version = "0.1.0"
+version = "0.1.9"
 description = "A client for Lollms that allows audio to audio full interaction with Lollms"
 authors = [
     { name = "ParisNeo", email = "parisneoai@gmail.com" }
@@ -12,7 +12,8 @@ authors = [
 dependencies = [
     "requests",
     "pydantic",
-    "lollms_client>=0.5.9"
+    "lollms_client>=0.6.0",
+    "requests"
 ]
 
 [project.scripts]
@@ -20,3 +21,6 @@ talk_to_lollms = "talk_to_lollms:main"
 
 [tool.setuptools]
 packages = ["talk_to_lollms"]
+
+[tool.setuptools.package-data]
+"talk_to_lollms" = ["assets/*.svg"]

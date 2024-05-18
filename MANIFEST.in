@@ -1,0 +1,1 @@
+recursive-include talk_to_lollms/assets *.svg
