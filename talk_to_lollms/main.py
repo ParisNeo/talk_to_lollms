@@ -77,7 +77,7 @@ class AudioRecorder:
 
         if snd_device is None:
             devices = sd.query_devices()
-            snd_device = [device['name'] for device in devices][0]
+            snd_device = [device['name'] for device in devices if device["max_input_channels"]>0][0]
 
         self.snd_device = snd_device
         self.logs_folder = logs_folder
@@ -143,8 +143,7 @@ class AudioRecorder:
         self.stop_flag = True
 
     def _record(self):
-        sd.default.device = self.snd_device
-        with sd.InputStream(channels=self.channels, samplerate=self.rate, callback=self.callback, dtype='int16'):
+        with sd.InputStream(channels=self.channels, device =self.snd_device, samplerate=self.rate, callback=self.callback, dtype='int16'):
             while not self.stop_flag:
                 time.sleep(0.1)
 
@@ -495,7 +494,7 @@ class MainWindow(QMainWindow):
         model_input =  QLineEdit(self.recorder.model)
         devices_list = QComboBox(self)
         devices = sd.query_devices()
-        device_names = [device['name'] for device in devices]
+        device_names = [device['name'] for device in devices if device["max_input_channels"]>0]
         devices_list.addItems(device_names)        
         devices_list.setCurrentText(str(self.recorder.snd_device))
 
